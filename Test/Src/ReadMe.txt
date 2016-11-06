@@ -14,10 +14,10 @@ Linux: TO DO
 URIParserTest.cpp
     This is the suite of tests to directly test the parsing function within the DLL.
 
-URIParserCDLLTest.cpp
+TO DO: URIParserCDLLTest.cpp
 	This is the suite of tests to check the parsing via the C DLL calls.
 
-URIParserCppWrapperTest.cpp
+TO DO: URIParserCppWrapperTest.cpp
 	This is the suite of tests to check the parsing via the Cpp DLL wrapper.
 
 /////////////////////////////////////////////////////////////////////////////
