@@ -39,3 +39,6 @@
 *.ipch
 *.tlog
 *.log
+*.exp
+*.iobj
+*.ipdb

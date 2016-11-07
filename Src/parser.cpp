@@ -29,6 +29,22 @@ namespace URIPARSER
 			}
 			return bRet;
 		}
+		bool SplitOnLast(const char split, const std::string input, std::string& before, std::string& after)
+		{
+			bool bRet = false;
+			const std::string inputCopy = input;// so the same string can be passed in to before or after
+			const std::size_t pos = inputCopy.find_last_of(split);
+			if (pos != std::string::npos)
+			{
+				before = inputCopy.substr(0, pos);
+				if (inputCopy.size() > (pos + 1))
+				{
+					after = inputCopy.substr(pos + 1);
+				}
+				bRet = true;
+			}
+			return bRet;
+		}
 		///\TODO improve percent encoding validation
 		bool ValidateCharacters(const std::string& input)
 		{
@@ -59,11 +75,26 @@ namespace URIPARSER
 			}
 			return false;
 		}
+		bool ValidateHostCharacters(const std::string& input)
+		{
+			//The characters !$&'()*+,;= are permitted by generic URI syntax to be used unencoded in the user information, host, and path as delimiters
+			if (std::regex_match(input, std::regex("^[A-Za-z0-9-._~%!$&'()*+,;=]*$")))
+			{
+				//hostname or IPv4
+				return true;
+			}
+			else if (std::regex_match(input, std::regex("^\\[[A-Fa-f0-9:]+\\]$")))
+			{
+				//IPv6
+				return true;
+			}
+			return false;
+		}
 		bool ValidatePathCharacters(const std::string& input)
 		{
 			//The characters !$&'()*+,;= are permitted by generic URI syntax to be used unencoded in the user information, host, and path as delimiters
 			//Additionally, : and @ may appear unencoded within the path, query, and fragment
-			if (std::regex_match(input, std::regex("^[A-Za-z0-9-._~%!$&'()*+,;=:@]*$")))
+			if (std::regex_match(input, std::regex("^[A-Za-z0-9-._~%!$&'()*+,;=:@/]*$")))
 			{
 				return true;
 			}
@@ -85,7 +116,7 @@ namespace URIPARSER
 			bRet = bRet && ValidateCharacters(parsedURI.schema);
 			bRet = bRet && ValidateUserPasswordHostCharacters(parsedURI.user);
 			bRet = bRet && ValidateUserPasswordHostCharacters(parsedURI.password);
-			bRet = bRet && ValidateUserPasswordHostCharacters(parsedURI.host);
+			bRet = bRet && ValidateHostCharacters(parsedURI.host);
 			bRet = bRet && ValidatePort(parsedURI.port);
 			bRet = bRet && ValidatePathCharacters(parsedURI.path);
 			bRet = bRet && ValidateQueryFragmentCharacters(parsedURI.query);
@@ -130,8 +161,8 @@ namespace URIPARSER
 									{
 										if (!SplitOnFirst(':', userPassword, parsedURI.user, parsedURI.password))
 										{
-											//malformed URI
-											bRet = false;
+											//Allow username with no password
+											parsedURI.user = userPassword;
 										}
 									}
 								}
@@ -142,7 +173,7 @@ namespace URIPARSER
 
 								if (!hostPort.empty())
 								{
-									if (!SplitOnFirst(':', hostPort, parsedURI.host, parsedURI.port))
+									if (!SplitOnLast(':', hostPort, parsedURI.host, parsedURI.port))
 									{
 										//We only have host
 										parsedURI.host = hostPort;
@@ -181,15 +212,13 @@ namespace URIPARSER
 				}
 			}
 		}
+		bRet = bRet && ValidateData(parsedURI);
 		if (bRet)
 		{
-			if (ValidateData(parsedURI))
-			{
-				//use compiler provided copy constructor for now
-				//ensure we don't pass partially parsed data back to the client
-				///\todo add error message
-				output = parsedURI;
-			}
+			//use compiler provided copy constructor for now
+			//ensure we don't pass partially parsed data back to the client
+			///\todo add error messages
+			output = parsedURI;
 		}
 		return bRet;
 	}
