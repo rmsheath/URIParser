@@ -39,12 +39,6 @@ namespace URIPARSER
 	bool URIParser::Parse(const std::string URI, URIData& parsedURI)
 	{
 		bool bRet(!URI.empty());
-		//\TODO: use a copy of parsedURI so it is left unchanged in faliure scenario
-		//\TODO: identify more faliure scenarios and add add tests
-		//\TODO: Add tests for port, user, password, query, fragment
-		//\TODO: Refactor
-		//\TODO: Move into another project
-		//\TODO: Add DLL and wrapper with portable data structures for access from other application
 		if (bRet)
 		{
 			std::string remainingURI;
@@ -68,7 +62,7 @@ namespace URIPARSER
 								{
 									if (!userPassword.empty())
 									{
-										if (!SplitOnFirst(':', authority, parsedURI.user, parsedURI.password))
+										if (!SplitOnFirst(':', userPassword, parsedURI.user, parsedURI.password))
 										{
 											//malformed URI
 											bRet = false;
@@ -106,17 +100,13 @@ namespace URIPARSER
 							{
 								//path is assigned
 								//We have a query
-								if (SplitOnFirst('#', remainingURI, parsedURI.query, parsedURI.fragment))
+								if (!SplitOnFirst('#', remainingURI, parsedURI.query, parsedURI.fragment))
 								{
-
+									parsedURI.query = remainingURI;
 								}
-
+								
 							}
-							else if (SplitOnFirst('#', remainingURI, parsedURI.path, parsedURI.fragment))
-							{
-								//there is no query
-							}
-							else
+							else if (!SplitOnFirst('#', remainingURI, parsedURI.path, parsedURI.fragment))
 							{
 								parsedURI.path = remainingURI;
 							}
