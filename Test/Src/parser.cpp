@@ -38,9 +38,14 @@ namespace URIPARSER
 	/// <returns>True if the URI parse was successful, false otherwise</returns>
 	bool URIParser::Parse(const std::string URI, URIData& parsedURI)
 	{
-		bool bRet(false);
-
-		if (!URI.empty())
+		bool bRet(!URI.empty());
+		//\TODO: use a copy of parsedURI so it is left unchanged in faliure scenario
+		//\TODO: identify more faliure scenarios and add add tests
+		//\TODO: Add tests for port, user, password, query, fragment
+		//\TODO: Refactor
+		//\TODO: Move into another project
+		//\TODO: Add DLL and wrapper with portable data structures for access from other application
+		if (bRet)
 		{
 			std::string remainingURI;
 			if (SplitOnFirst(':', URI, parsedURI.schema, remainingURI))
@@ -52,20 +57,29 @@ namespace URIPARSER
 						//trim "//"
 						remainingURI = remainingURI.substr(2);
 
-						// Now parse [user:password@]host[:port]
-						std::string authority;
-						if (SplitOnFirst('/', remainingURI, authority, remainingURI))
+						if(!remainingURI.empty())
 						{
-							std::string userPassword, hostPort;
-							if (SplitOnFirst('@', authority, userPassword, hostPort))
+							// Now parse [user:password@]host[:port]
+							std::string authority;
+							if (SplitOnFirst('/', remainingURI, authority, remainingURI))
 							{
-								if (!userPassword.empty())
+								std::string userPassword, hostPort;
+								if (SplitOnFirst('@', authority, userPassword, hostPort))
 								{
-									if (!SplitOnFirst(':', authority, parsedURI.user, parsedURI.password))
+									if (!userPassword.empty())
 									{
-										///TO DO: Error: malformed URI
+										if (!SplitOnFirst(':', authority, parsedURI.user, parsedURI.password))
+										{
+											//malformed URI
+											bRet = false;
+										}
 									}
 								}
+								else
+								{
+									hostPort = authority;
+								}
+
 								if (!hostPort.empty())
 								{
 									if (!SplitOnFirst(':', hostPort, parsedURI.host, parsedURI.port))
@@ -74,8 +88,8 @@ namespace URIPARSER
 										parsedURI.host = hostPort;
 									}
 								}
-							}
 
+							}
 						}
 					}
 					if (!remainingURI.empty())

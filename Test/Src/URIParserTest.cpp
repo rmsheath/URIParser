@@ -25,12 +25,12 @@ BOOST_FIXTURE_TEST_CASE(HTTPparse, URIFixture)
 	URIPARSER::URIData parsedData;
 	URIPARSER::URIParser parser;
 	BOOST_CHECK_EQUAL(parser.Parse("https://example.org/absolute/URI/with/absolute/path/to/resource.txt", parsedData), true);
-	BOOST_CHECK_EQUAL(parsedData.schema, "ftp");
+	BOOST_CHECK_EQUAL(parsedData.schema, "https");
 	BOOST_CHECK_EQUAL(parsedData.user, "");
 	BOOST_CHECK_EQUAL(parsedData.password, "");
 	BOOST_CHECK_EQUAL(parsedData.host, "example.org");
 	BOOST_CHECK_EQUAL(parsedData.port, "");
-	BOOST_CHECK_EQUAL(parsedData.path, "resource.txt");
+	BOOST_CHECK_EQUAL(parsedData.path, "absolute/URI/with/absolute/path/to/resource.txt");
 	BOOST_CHECK_EQUAL(parsedData.query, "");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "");
 
