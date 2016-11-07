@@ -46,7 +46,7 @@ namespace URIPARSER
 			return bRet;
 		}
 		///\TODO improve percent encoding validation
-		bool ValidateCharacters(const std::string& input)
+		bool ValidateSchema(const std::string& input, std::string& errors)
 		{
 			//Permitted characters within a URI are the ASCII characters for the lowercase and uppercase letters
 			//of the modern English alphabet, the Arabic numerals, hyphen, period, underscore, and tilde.
@@ -55,18 +55,20 @@ namespace URIPARSER
 			{
 				return true;
 			}
+			errors = "Schema contains invalid characters";
 			return false;
 		}
 		///\TODO Validate port is in range 0-65535
-		bool ValidatePort(const std::string& port)
+		bool ValidatePort(const std::string& port, std::string& errors)
 		{
 			if (std::regex_match(port, std::regex("^[0-9]*$")))
 			{
 				return true;
 			}
+			errors = "Port contains invalid characters";
 			return false;
 		}
-		bool ValidateUserPasswordHostCharacters(const std::string& input)
+		bool ValidateUserPasswordCharacters(const std::string& input)
 		{
 			//The characters !$&'()*+,;= are permitted by generic URI syntax to be used unencoded in the user information, host, and path as delimiters
 			if (std::regex_match(input, std::regex("^[A-Za-z0-9-._~%!$&'()*+,;=]*$")))
@@ -75,7 +77,25 @@ namespace URIPARSER
 			}
 			return false;
 		}
-		bool ValidateHostCharacters(const std::string& input)
+		bool ValidateUser(const std::string& input, std::string& errors)
+		{
+			if (!ValidateUserPasswordCharacters(input))
+			{
+				errors = "Username contains invalid characters";
+				return false;
+			}
+			return true;
+		}
+		bool ValidatePassword(const std::string& input, std::string& errors)
+		{
+			if (!ValidateUserPasswordCharacters(input))
+			{
+				errors = "Password contains invalid characters";
+				return false;
+			}
+			return true;
+		}
+		bool ValidateHost(const std::string& input, std::string& errors)
 		{
 			//The characters !$&'()*+,;= are permitted by generic URI syntax to be used unencoded in the user information, host, and path as delimiters
 			if (std::regex_match(input, std::regex("^[A-Za-z0-9-._~%!$&'()*+,;=]*$")))
@@ -88,9 +108,10 @@ namespace URIPARSER
 				//IPv6
 				return true;
 			}
+			errors = "Host contains invalid characters";
 			return false;
 		}
-		bool ValidatePathCharacters(const std::string& input)
+		bool ValidatePath(const std::string& input, std::string& errors)
 		{
 			//The characters !$&'()*+,;= are permitted by generic URI syntax to be used unencoded in the user information, host, and path as delimiters
 			//Additionally, : and @ may appear unencoded within the path, query, and fragment
@@ -98,6 +119,7 @@ namespace URIPARSER
 			{
 				return true;
 			}
+			errors = "Path contains invalid characters";
 			return false;
 		}
 		bool ValidateQueryFragmentCharacters(const std::string& input)
@@ -110,17 +132,46 @@ namespace URIPARSER
 			}
 			return false;
 		}
-		bool ValidateData(const URIData& parsedURI)
+		bool ValidateQuery(const std::string& input, std::string& errors)
 		{
+			if (!ValidateQueryFragmentCharacters(input))
+			{
+				errors = "Query contains invalid characters";
+				return false;
+			}
+			return true;
+		}
+		bool ValidateFragment(const std::string& input, std::string& errors)
+		{
+			if (!ValidateQueryFragmentCharacters(input))
+			{
+				errors = "Fragment contains invalid characters";
+				return false;
+			}
+			return true;
+		}
+		bool ValidateData(const URIData& parsedURI, URIData& output)
+		{
+			std::string errors;
 			bool bRet(true);
-			bRet = bRet && ValidateCharacters(parsedURI.schema);
-			bRet = bRet && ValidateUserPasswordHostCharacters(parsedURI.user);
-			bRet = bRet && ValidateUserPasswordHostCharacters(parsedURI.password);
-			bRet = bRet && ValidateHostCharacters(parsedURI.host);
-			bRet = bRet && ValidatePort(parsedURI.port);
-			bRet = bRet && ValidatePathCharacters(parsedURI.path);
-			bRet = bRet && ValidateQueryFragmentCharacters(parsedURI.query);
-			bRet = bRet && ValidateQueryFragmentCharacters(parsedURI.fragment);
+			bRet = bRet && ValidateSchema(parsedURI.schema, errors);
+			bRet = bRet && ValidateUser(parsedURI.user, errors);
+			bRet = bRet && ValidatePassword(parsedURI.password, errors);
+			bRet = bRet && ValidateHost(parsedURI.host, errors);
+			bRet = bRet && ValidatePort(parsedURI.port, errors);
+			bRet = bRet && ValidatePath(parsedURI.path, errors);
+			bRet = bRet && ValidateQuery(parsedURI.query, errors);
+			bRet = bRet && ValidateFragment(parsedURI.fragment, errors);
+			if (bRet)
+			{
+				//use compiler provided copy constructor for now
+				//ensure we don't pass partially parsed data back to the client
+				output = parsedURI;
+			}
+			else
+			{
+				output.errors = errors;
+			}
 			return bRet;
 		}
 	}
@@ -212,13 +263,13 @@ namespace URIPARSER
 				}
 			}
 		}
-		bRet = bRet && ValidateData(parsedURI);
-		if (bRet)
+		if (!bRet)
 		{
-			//use compiler provided copy constructor for now
-			//ensure we don't pass partially parsed data back to the client
-			///\todo add error messages
-			output = parsedURI;
+			output.errors = "Failed to parse URI";
+		}
+		else
+		{
+			bRet = ValidateData(parsedURI, output);
 		}
 		return bRet;
 	}
