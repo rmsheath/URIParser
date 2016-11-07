@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Test.h"
 #include "URIFixture.h"
-#include "parser.h"
+#include "..\..\Src\parser.h"
 BOOST_AUTO_TEST_SUITE(URIParserTest)
 
 //Examples of absolute URIs from wikipedia
