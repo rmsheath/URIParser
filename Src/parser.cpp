@@ -1,4 +1,6 @@
 #include "stdafx.h"
+#include <regex>
+
 #include "parser.h"
 
 namespace URIPARSER
@@ -27,6 +29,69 @@ namespace URIPARSER
 			}
 			return bRet;
 		}
+		///\TODO improve percent encoding validation
+		bool ValidateCharacters(const std::string& input)
+		{
+			//Permitted characters within a URI are the ASCII characters for the lowercase and uppercase letters
+			//of the modern English alphabet, the Arabic numerals, hyphen, period, underscore, and tilde.
+			//Octets represented by any other character must be percent-encoded
+			if (std::regex_match(input, std::regex("^[A-Za-z0-9-._~%]*$")))
+			{
+				return true;
+			}
+			return false;
+		}
+		///\TODO Validate port is in range 0-65535
+		bool ValidatePort(const std::string& port)
+		{
+			if (std::regex_match(port, std::regex("^[0-9]*$")))
+			{
+				return true;
+			}
+			return false;
+		}
+		bool ValidateUserPasswordHostCharacters(const std::string& input)
+		{
+			//The characters !$&'()*+,;= are permitted by generic URI syntax to be used unencoded in the user information, host, and path as delimiters
+			if (std::regex_match(input, std::regex("^[A-Za-z0-9-._~%!$&'()*+,;=]*$")))
+			{
+				return true;
+			}
+			return false;
+		}
+		bool ValidatePathCharacters(const std::string& input)
+		{
+			//The characters !$&'()*+,;= are permitted by generic URI syntax to be used unencoded in the user information, host, and path as delimiters
+			//Additionally, : and @ may appear unencoded within the path, query, and fragment
+			if (std::regex_match(input, std::regex("^[A-Za-z0-9-._~%!$&'()*+,;=:@]*$")))
+			{
+				return true;
+			}
+			return false;
+		}
+		bool ValidateQueryFragmentCharacters(const std::string& input)
+		{
+			//Additionally, : and @ may appear unencoded within the path, query, and fragment
+			//and ? and / may appear unencoded as data within the query or fragment.
+			if (std::regex_match(input, std::regex("^[A-Za-z0-9-._~%!$&'()*+,;=:@?/]*$")))
+			{
+				return true;
+			}
+			return false;
+		}
+		bool ValidateData(const URIData& parsedURI)
+		{
+			bool bRet(true);
+			bRet = bRet && ValidateCharacters(parsedURI.schema);
+			bRet = bRet && ValidateUserPasswordHostCharacters(parsedURI.user);
+			bRet = bRet && ValidateUserPasswordHostCharacters(parsedURI.password);
+			bRet = bRet && ValidateUserPasswordHostCharacters(parsedURI.host);
+			bRet = bRet && ValidatePort(parsedURI.port);
+			bRet = bRet && ValidatePathCharacters(parsedURI.path);
+			bRet = bRet && ValidateQueryFragmentCharacters(parsedURI.query);
+			bRet = bRet && ValidateQueryFragmentCharacters(parsedURI.fragment);
+			return bRet;
+		}
 	}
 
 	/// <summary>Parses a URI of the form scheme:[//[user:password@]host[:port]][/]path[?query][#fragment] as per https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
@@ -36,8 +101,9 @@ namespace URIPARSER
 	/// and ? and / may appear unencoded as data within the query or fragment.
 	/// </summary>
 	/// <returns>True if the URI parse was successful, false otherwise</returns>
-	bool URIParser::Parse(const std::string URI, URIData& parsedURI)
+	bool URIParser::Parse(const std::string URI, URIData& output)
 	{
+		URIData parsedURI;
 		bool bRet(!URI.empty());
 		if (bRet)
 		{
@@ -113,6 +179,16 @@ namespace URIPARSER
 						}
 					}
 				}
+			}
+		}
+		if (bRet)
+		{
+			if (ValidateData(parsedURI))
+			{
+				//use compiler provided copy constructor for now
+				//ensure we don't pass partially parsed data back to the client
+				///\todo add error message
+				output = parsedURI;
 			}
 		}
 		return bRet;
