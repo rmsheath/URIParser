@@ -4,19 +4,9 @@
 #include "..\..\Src\parser.h"
 BOOST_AUTO_TEST_SUITE(URIParserTest)
 
-//\TODO: Add test case to check data is not altered if parse fails - Fix this in parse() i.e. use a copy of parsedURI
 //\TODO: identify more faliure scenarios and add tests
 //\TODO: Add more tests for port, user, password, query, fragment
-//\TODO: Add tests to validate correct use of the ASCII character set following these rules:
-// Strings of data octets within a URI are represented as characters. Permitted characters within a URI are the ASCII characters
-// for the lowercase and uppercase letters of the modern English alphabet, the Arabic numerals, hyphen, period, underscore, and 
-// tilde. Octets represented by any other character must be percent - encoded.
-// the characters : / ? # [] @ are reserved for use as delimiters of the generic URI components and must be percent - encoded — for example, % 3F for a question mark.
-// The characters !$ & ' ( ) * + , ; = are permitted by generic URI syntax to be used unencoded in the user information, host, and path as delimiters.
-// Additionally, : and @ may appear unencoded within the path, query, and fragment
-// and ? and / may appear unencoded as data within the query or fragment.
 //\TODO: Refactor URIParser::Parse
-//\TODO: consider handling wide-strings
 //\TODO: Add C DLL and C++ wrapper with portable data structures for access from other application
 
 BOOST_FIXTURE_TEST_CASE(InvalidCharactersShouldFail, URIFixture)
@@ -189,13 +179,13 @@ BOOST_FIXTURE_TEST_CASE(ISSNParse, URIFixture)
 {
 	URIPARSER::URIData parsedData;
 	URIPARSER::URIParser parser;
-	BOOST_CHECK_EQUAL(parser.Parse("urn:ISSN:1535–3613", parsedData), true);
+	BOOST_CHECK_EQUAL(parser.Parse("urn:ISSN:1535-3613", parsedData), true);
 	BOOST_CHECK_EQUAL(parsedData.schema, "urn");
 	BOOST_CHECK_EQUAL(parsedData.user, "");
 	BOOST_CHECK_EQUAL(parsedData.password, "");
 	BOOST_CHECK_EQUAL(parsedData.host, "");
 	BOOST_CHECK_EQUAL(parsedData.port, "");
-	BOOST_CHECK_EQUAL(parsedData.path, "ISSN:1535–3613");
+	BOOST_CHECK_EQUAL(parsedData.path, "ISSN:1535-3613");
 	BOOST_CHECK_EQUAL(parsedData.query, "");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "");
 }
