@@ -5,18 +5,64 @@
 BOOST_AUTO_TEST_SUITE(URIParserTest)
 
 //Examples of absolute URIs from wikipedia
-//https://example.org/absolute/URI/with/absolute/path/to/resource.txt
-//ftp://example.org/resource.txt
-//urn:ISSN:1535–3613
-
-BOOST_FIXTURE_TEST_CASE(SimpleParse, URIFixture)
+BOOST_FIXTURE_TEST_CASE(FTPparse, URIFixture)
 {
 	URIPARSER::URIData parsedData;
 	URIPARSER::URIParser parser;
-	parser.Parse("urn:ISSN:1535–3613", parsedData);
-	BOOST_CHECK_EQUAL(parsedData.schema, "urn");
-	BOOST_CHECK_EQUAL(parsedData.host, "ISSN");
-	BOOST_CHECK_EQUAL(parsedData.path, "1535–3613");
+	BOOST_CHECK_EQUAL(parser.Parse("ftp://example.org/resource.txt", parsedData), true);
+	BOOST_CHECK_EQUAL(parsedData.schema, "ftp");
+	BOOST_CHECK_EQUAL(parsedData.user, "");
+	BOOST_CHECK_EQUAL(parsedData.password, "");
+	BOOST_CHECK_EQUAL(parsedData.host, "example.org");
+	BOOST_CHECK_EQUAL(parsedData.port, "");
+	BOOST_CHECK_EQUAL(parsedData.path, "resource.txt");
+	BOOST_CHECK_EQUAL(parsedData.query, "");
+	BOOST_CHECK_EQUAL(parsedData.fragment, "");
 }
 
+BOOST_FIXTURE_TEST_CASE(HTTPparse, URIFixture)
+{
+	URIPARSER::URIData parsedData;
+	URIPARSER::URIParser parser;
+	BOOST_CHECK_EQUAL(parser.Parse("https://example.org/absolute/URI/with/absolute/path/to/resource.txt", parsedData), true);
+	BOOST_CHECK_EQUAL(parsedData.schema, "ftp");
+	BOOST_CHECK_EQUAL(parsedData.user, "");
+	BOOST_CHECK_EQUAL(parsedData.password, "");
+	BOOST_CHECK_EQUAL(parsedData.host, "example.org");
+	BOOST_CHECK_EQUAL(parsedData.port, "");
+	BOOST_CHECK_EQUAL(parsedData.path, "resource.txt");
+	BOOST_CHECK_EQUAL(parsedData.query, "");
+	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+
+}
+
+BOOST_FIXTURE_TEST_CASE(ISSNParse, URIFixture)
+{
+	URIPARSER::URIData parsedData;
+	URIPARSER::URIParser parser;
+	BOOST_CHECK_EQUAL(parser.Parse("urn:ISSN:1535–3613", parsedData), true);
+	BOOST_CHECK_EQUAL(parsedData.schema, "urn");
+	BOOST_CHECK_EQUAL(parsedData.user, "");
+	BOOST_CHECK_EQUAL(parsedData.password, "");
+	BOOST_CHECK_EQUAL(parsedData.host, "");
+	BOOST_CHECK_EQUAL(parsedData.port, "");
+	BOOST_CHECK_EQUAL(parsedData.path, "ISSN:1535–3613");
+	BOOST_CHECK_EQUAL(parsedData.query, "");
+	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+}
+
+BOOST_FIXTURE_TEST_CASE(EmptyParse, URIFixture)
+{
+	URIPARSER::URIData parsedData;
+	URIPARSER::URIParser parser;
+	BOOST_CHECK_EQUAL(parser.Parse("", parsedData), false);
+	BOOST_CHECK_EQUAL(parsedData.schema, "");
+	BOOST_CHECK_EQUAL(parsedData.user, "");
+	BOOST_CHECK_EQUAL(parsedData.password, "");
+	BOOST_CHECK_EQUAL(parsedData.host, "");
+	BOOST_CHECK_EQUAL(parsedData.port, "");
+	BOOST_CHECK_EQUAL(parsedData.path, "");
+	BOOST_CHECK_EQUAL(parsedData.query, "");
+	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+}
 BOOST_AUTO_TEST_SUITE_END()
