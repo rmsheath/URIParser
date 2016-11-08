@@ -28,6 +28,7 @@ namespace URIPARSER
 		std::string path;
 		std::string query;
 		std::string fragment;
+		std::string errors;
 	};
 
 	class URI_PARSER_DLLEXPORT URIParser

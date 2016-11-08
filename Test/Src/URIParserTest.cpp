@@ -4,8 +4,8 @@
 #include "..\..\Src\parser.h"
 BOOST_AUTO_TEST_SUITE(URIParserTest)
 
-//\TODO: identify more faliure scenarios and add tests
-//\TODO: Add more tests for port, user, password, query, fragment
+//\TODO: find a better source of information as to the precise definition of a URI
+//\TODO: identify more failure scenarios and add tests
 //\TODO: Refactor URIParser::Parse
 //\TODO: Add C DLL and C++ wrapper with portable data structures for access from other application
 
@@ -27,6 +27,7 @@ BOOST_FIXTURE_TEST_CASE(InvalidCharactersShouldFail, URIFixture)
 	BOOST_CHECK_EQUAL(parsedData.path, "");
 	BOOST_CHECK_EQUAL(parsedData.query, "");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+	BOOST_CHECK_NE(parsedData.errors, "");
 }
 
 BOOST_FIXTURE_TEST_CASE(InvalidSchemaCharactersShouldFail, URIFixture)
@@ -43,6 +44,7 @@ BOOST_FIXTURE_TEST_CASE(InvalidSchemaCharactersShouldFail, URIFixture)
 	BOOST_CHECK_EQUAL(parsedData.path, "");
 	BOOST_CHECK_EQUAL(parsedData.query, "");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+	BOOST_CHECK_NE(parsedData.errors, "");
 }
 
 BOOST_FIXTURE_TEST_CASE(FTPWithUsernamePasswordPortAndIPv6, URIFixture)
@@ -58,6 +60,7 @@ BOOST_FIXTURE_TEST_CASE(FTPWithUsernamePasswordPortAndIPv6, URIFixture)
 	BOOST_CHECK_EQUAL(parsedData.path, "resource.txt");
 	BOOST_CHECK_EQUAL(parsedData.query, "");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+	BOOST_CHECK_EQUAL(parsedData.errors, "");
 
 }
 
@@ -74,6 +77,7 @@ BOOST_FIXTURE_TEST_CASE(FTPWithUsernamePasswordPortAndIPv4, URIFixture)
 	BOOST_CHECK_EQUAL(parsedData.path, "resource.txt");
 	BOOST_CHECK_EQUAL(parsedData.query, "");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+	BOOST_CHECK_EQUAL(parsedData.errors, "");
 
 }
 
@@ -93,6 +97,7 @@ BOOST_FIXTURE_TEST_CASE(FTPWithUsernamePortAndNoPassword, URIFixture)
 	BOOST_CHECK_EQUAL(parsedData.path, "resource.txt");
 	BOOST_CHECK_EQUAL(parsedData.query, "");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+	BOOST_CHECK_EQUAL(parsedData.errors, "");
 
 }
 
@@ -109,6 +114,7 @@ BOOST_FIXTURE_TEST_CASE(FTPWithUsernamePasswordAndPort, URIFixture)
 	BOOST_CHECK_EQUAL(parsedData.path, "resource.txt");
 	BOOST_CHECK_EQUAL(parsedData.query, "");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+	BOOST_CHECK_EQUAL(parsedData.errors, "");
 
 }
 
@@ -125,6 +131,7 @@ BOOST_FIXTURE_TEST_CASE(HTTPSWithQueryAndPort, URIFixture)
 	BOOST_CHECK_EQUAL(parsedData.path, "classic/home");
 	BOOST_CHECK_EQUAL(parsedData.query, "studioid=285893");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+	BOOST_CHECK_EQUAL(parsedData.errors, "");
 
 }
 
@@ -141,6 +148,7 @@ BOOST_FIXTURE_TEST_CASE(HTTPSWithFragment, URIFixture)
 	BOOST_CHECK_EQUAL(parsedData.path, "wiki/Uniform_Resource_Identifier");
 	BOOST_CHECK_EQUAL(parsedData.query, "");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "Notes");
+	BOOST_CHECK_EQUAL(parsedData.errors, "");
 }
 
 //Examples of absolute URIs from wikipedia
@@ -157,6 +165,7 @@ BOOST_FIXTURE_TEST_CASE(FTPparse, URIFixture)
 	BOOST_CHECK_EQUAL(parsedData.path, "resource.txt");
 	BOOST_CHECK_EQUAL(parsedData.query, "");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+	BOOST_CHECK_EQUAL(parsedData.errors, "");
 }
 
 BOOST_FIXTURE_TEST_CASE(HTTPparse, URIFixture)
@@ -172,7 +181,7 @@ BOOST_FIXTURE_TEST_CASE(HTTPparse, URIFixture)
 	BOOST_CHECK_EQUAL(parsedData.path, "absolute/URI/with/absolute/path/to/resource.txt");
 	BOOST_CHECK_EQUAL(parsedData.query, "");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "");
-
+	BOOST_CHECK_EQUAL(parsedData.errors, "");
 }
 
 BOOST_FIXTURE_TEST_CASE(ISSNParse, URIFixture)
@@ -188,6 +197,7 @@ BOOST_FIXTURE_TEST_CASE(ISSNParse, URIFixture)
 	BOOST_CHECK_EQUAL(parsedData.path, "ISSN:1535-3613");
 	BOOST_CHECK_EQUAL(parsedData.query, "");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+	BOOST_CHECK_EQUAL(parsedData.errors, "");
 }
 
 BOOST_FIXTURE_TEST_CASE(EmptyParse, URIFixture)
@@ -203,6 +213,7 @@ BOOST_FIXTURE_TEST_CASE(EmptyParse, URIFixture)
 	BOOST_CHECK_EQUAL(parsedData.path, "");
 	BOOST_CHECK_EQUAL(parsedData.query, "");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+	BOOST_CHECK_NE(parsedData.errors, "");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
