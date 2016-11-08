@@ -148,6 +148,8 @@
     <ClInclude Include="parser.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="URIParser.h" />
+    <ClInclude Include="URIParserTypes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
