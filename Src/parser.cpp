@@ -29,19 +29,26 @@ namespace URIPARSER
 			}
 			return bRet;
 		}
-		bool SplitOnLast(const char split, const std::string input, std::string& before, std::string& after)
+		bool SplitIPv6HostAndPort(const std::string input, std::string& host, std::string& port)
 		{
 			bool bRet = false;
-			const std::string inputCopy = input;// so the same string can be passed in to before or after
-			const std::size_t pos = inputCopy.find_last_of(split);
-			if (pos != std::string::npos)
-			{
-				before = inputCopy.substr(0, pos);
-				if (inputCopy.size() > (pos + 1))
+			// Extract Ipv6 hostname and optional port
+			//\todo check this regular expression
+			std::regex base_regex("^\\[([A-Fa-f0-9:]+)\\][:]*([0-9]*)$");
+			std::smatch base_match;
+
+			if (std::regex_match(input, base_match, base_regex)) {
+				if (base_match.size() == 3)
 				{
-					after = inputCopy.substr(pos + 1);
+					host = base_match[1].str();
+					port = base_match[2].str();
+					bRet = true;
 				}
-				bRet = true;
+				else if (base_match.size() == 2)
+				{
+					host = base_match[1].str();
+					bRet = true;
+				}
 			}
 			return bRet;
 		}
@@ -103,7 +110,7 @@ namespace URIPARSER
 				//hostname or IPv4
 				return true;
 			}
-			else if (std::regex_match(input, std::regex("^\\[[A-Fa-f0-9:]+\\]$")))
+			else if (std::regex_match(input, std::regex("^[A-Fa-f0-9:]+$")))
 			{
 				//IPv6
 				return true;
@@ -224,10 +231,14 @@ namespace URIPARSER
 
 								if (!hostPort.empty())
 								{
-									if (!SplitOnLast(':', hostPort, parsedURI.host, parsedURI.port))
+									if (!SplitIPv6HostAndPort(hostPort, parsedURI.host, parsedURI.port))
 									{
-										//We only have host
-										parsedURI.host = hostPort;
+										//This is Ipv4 or hostname
+										if (!SplitOnFirst(':', hostPort, parsedURI.host, parsedURI.port))
+										{
+											//We only have host
+											parsedURI.host = hostPort;
+										}
 									}
 								}
 
