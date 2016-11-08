@@ -1,41 +1,39 @@
 #include "stdafx.h"
 #include <memory>
 #include "URIParser.h"
-#include "parser.h"
+#include "URIParseManager.h"
 
 const char URI_PARSER_API_VERSION_NUMBER[] = "1.0.0";
-std::shared_ptr<URIPARSER::URIParser> parser_;
+std::shared_ptr<URIPARSER::URIParseManager> parserManager_;
 
 URIParserVersionNumber URIParserGetVersionNumber()
 {
 	return URI_PARSER_API_VERSION_NUMBER;
 }
 
-bool URIParserInitialise(TOnParsedCallback callback)
+bool URIParserInitialise(TOnParsedCallback* callback)
 {
-	if (!parser_)
+	if (!parserManager_ && callback)
 	{
-		parser_ = std::make_shared<URIPARSER::URIParser>();
+		parserManager_ = std::make_shared<URIPARSER::URIParseManager>(*callback);
 	}
 	return true;
 }
 
 bool URIParserUninitialise()
 {
-	if (parser_)
+	if (parserManager_)
 	{
-		parser_.reset();
+		parserManager_.reset();
 	}
 	return true;
 }
-
+///\todo get the URIParserHostContext working so it is provided in the callback as an identifier
 bool ParseURI(const URIParserHostContext hostContext, const char* uri)
 {
-	if (parser_)
+	if (parserManager_)
 	{
-		URIPARSER::URIData data;
-		parser_->Parse(uri, data);
-		return true;
+		return parserManager_->Parse(uri);
 	}
 	return false;
 }

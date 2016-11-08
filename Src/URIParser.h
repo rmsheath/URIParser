@@ -9,7 +9,7 @@ extern "C" {
 
 	URI_PARSER_DLLEXPORT URIParserVersionNumber URIParserGetVersionNumber();
 
-	URI_PARSER_DLLEXPORT bool URIParserInitialise(TOnParsedCallback callback);
+	URI_PARSER_DLLEXPORT bool URIParserInitialise(TOnParsedCallback* callback);
 
 	URI_PARSER_DLLEXPORT bool URIParserUninitialise();
 
