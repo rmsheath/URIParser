@@ -4,8 +4,8 @@
 #include "..\..\Src\parser.h"
 BOOST_AUTO_TEST_SUITE(URIParserTest)
 
-//\TODO: identify more faliure scenarios and add tests
-//\TODO: Add more tests for port, user, password, query, fragment
+//\TODO: find a better source of information as to the precise definition of a URI
+//\TODO: identify more failure scenarios and add tests
 //\TODO: Refactor URIParser::Parse
 //\TODO: Add C DLL and C++ wrapper with portable data structures for access from other application
 
