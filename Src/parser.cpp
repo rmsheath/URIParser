@@ -13,7 +13,7 @@ namespace URIPARSER
 		/// <param name="before">The string before the spit character</param>
 		/// <param name="after">The string after the spit character</param>
 		/// <returns>True if the split character is found, false otherwise</returns>
-		bool SplitOnFirst(const char split, const std::string input, std::string& before, std::string& after)
+		bool SplitOnFirst(const char split, const std::string& input, std::string& before, std::string& after)
 		{
 			bool bRet = false;
 			const std::string inputCopy = input;// so the same string can be passed in to before or after
@@ -29,7 +29,20 @@ namespace URIPARSER
 			}
 			return bRet;
 		}
-		bool SplitIPv6HostAndPort(const std::string input, std::string& host, std::string& port)
+		bool RemovePrefix(std::string& input, const std::string& prefix)
+		{
+			if ((!prefix.empty()) && (!input.empty()))
+			{
+				const std::size_t pos = input.find_first_not_of(prefix);
+				if (pos == prefix.size())
+				{
+					input = input.substr(pos);
+					return !input.empty();
+				}
+			}
+			return false;
+		}
+		bool SplitIPv6HostAndPort(const std::string& input, std::string& host, std::string& port)
 		{
 			bool bRet = false;
 			// Extract Ipv6 hostname and optional port
@@ -117,7 +130,7 @@ namespace URIPARSER
 				// unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"
 				// pct-encoded = "%" HEXDIG HEXDIG
 				// sub-delims = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
-				
+
 				// IPv4address   = dec-octet "." dec-octet "." dec-octet "." dec-octet
 				// dec-octet = number in range 0-255
 				// Cannot validate IPv4Adddress because it is subset of the format for reg-name
@@ -150,7 +163,7 @@ namespace URIPARSER
 				// sub-delims = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
 				return true;
 			}
-			
+
 			errors = "Host contains invalid characters";
 			return false;
 		}
@@ -243,6 +256,59 @@ namespace URIPARSER
 			}
 			return bRet;
 		}
+
+		void ParseAuthority(const std::string& authority, URIData& output)
+		{
+			std::string userPassword, hostPort;
+			if (SplitOnFirst('@', authority, userPassword, hostPort))
+			{
+				if (!userPassword.empty())
+				{
+					if (!SplitOnFirst(':', userPassword, output.user, output.password))
+					{
+						//Allow username with no password
+						output.user = userPassword;
+					}
+				}
+			}
+			else
+			{
+				hostPort = authority;
+			}
+
+			if (!hostPort.empty())
+			{
+				if (!SplitIPv6HostAndPort(hostPort, output.host, output.port))
+				{
+					//This is Ipv4 or hostname
+					if (!SplitOnFirst(':', hostPort, output.host, output.port))
+					{
+						//We only have host
+						output.host = hostPort;
+					}
+				}
+			}
+		}
+		void ParsePathQueryFragment(const std::string& pathQueryFragment, URIData& output)
+		{
+			//[path]["?" query]["#" fragment]
+			//path, query, and fragment are all optional
+			std::string queryFragment;
+			if (SplitOnFirst('?', pathQueryFragment, output.path, queryFragment))
+			{
+				//path is assigned
+				//We have a query
+				if (!SplitOnFirst('#', queryFragment, output.query, output.fragment))
+				{
+					output.query = queryFragment;
+				}
+
+			}
+			else if (!SplitOnFirst('#', pathQueryFragment, output.path, output.fragment))
+			{
+				output.path = pathQueryFragment;
+			}
+		}
 	}
 
 	//  More precise definition: https://tools.ietf.org/html/rfc3986#section-3
@@ -327,7 +393,7 @@ namespace URIPARSER
 	/// and ? and / may appear unencoded as data within the query or fragment.
 	/// </summary>
 	/// <returns>True if the URI parse was successful, false otherwise</returns>
-	bool URIParser::Parse(const std::string URI, URIData& output)
+	bool URIParser::Parse(const std::string& URI, URIData& output)
 	{
 		URIData parsedURI;
 		bool bRet(!URI.empty());
@@ -338,87 +404,34 @@ namespace URIPARSER
 			{
 				if (!remainingURI.empty())
 				{
-					if ((remainingURI.size() > 1) && (remainingURI.substr(0, 2) == "//"))
+					if (RemovePrefix(remainingURI, "//"))
 					{
-						//trim "//"
-						remainingURI = remainingURI.substr(2);
-
-						if(!remainingURI.empty())
+						// Now parse [user:password@]host[:port]
+						std::string authority;
+						if (SplitOnFirst('/', remainingURI, authority, remainingURI))
 						{
-							// Now parse [user:password@]host[:port]
-							std::string authority;
-							if (SplitOnFirst('/', remainingURI, authority, remainingURI))
-							{
-								std::string userPassword, hostPort;
-								if (SplitOnFirst('@', authority, userPassword, hostPort))
-								{
-									if (!userPassword.empty())
-									{
-										if (!SplitOnFirst(':', userPassword, parsedURI.user, parsedURI.password))
-										{
-											//Allow username with no password
-											parsedURI.user = userPassword;
-										}
-									}
-								}
-								else
-								{
-									hostPort = authority;
-								}
-
-								if (!hostPort.empty())
-								{
-									if (!SplitIPv6HostAndPort(hostPort, parsedURI.host, parsedURI.port))
-									{
-										//This is Ipv4 or hostname
-										if (!SplitOnFirst(':', hostPort, parsedURI.host, parsedURI.port))
-										{
-											//We only have host
-											parsedURI.host = hostPort;
-										}
-									}
-								}
-							}
+							ParseAuthority(authority, parsedURI);
 						}
 					}
+					RemovePrefix(remainingURI, "/");
 					if (!remainingURI.empty())
 					{
-						// Now parse [/ ]path[?query][#fragment]
-						if (remainingURI[0] == '/')
-						{
-							//ignore the '/' separator
-							remainingURI = remainingURI.substr(1);
-						}
-						if (!remainingURI.empty())
-						{
-							if (SplitOnFirst('?', remainingURI, parsedURI.path, remainingURI))
-							{
-								//path is assigned
-								//We have a query
-								if (!SplitOnFirst('#', remainingURI, parsedURI.query, parsedURI.fragment))
-								{
-									parsedURI.query = remainingURI;
-								}
-								
-							}
-							else if (!SplitOnFirst('#', remainingURI, parsedURI.path, parsedURI.fragment))
-							{
-								parsedURI.path = remainingURI;
-							}
-						}
+						ParsePathQueryFragment(remainingURI, parsedURI);
 					}
 				}
 			}
 		}
-		if (!bRet)
+		if (bRet)
 		{
-			output.errors = "Failed to parse URI";
+			///\TODO: Move validation so it happens at the point each element is parsed
+			/// this will improve performance of rejecting invalid URIs and will mean only
+			/// used elements are validated
+			bRet = ValidateData(parsedURI, output);
 		}
 		else
 		{
-			bRet = ValidateData(parsedURI, output);
+			output.errors = "Failed to parse URI";
 		}
 		return bRet;
 	}
-
 }
