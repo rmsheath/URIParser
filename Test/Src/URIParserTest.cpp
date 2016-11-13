@@ -4,10 +4,54 @@
 #include "..\..\Src\parser.h"
 BOOST_AUTO_TEST_SUITE(URIParserTest)
 
-//\TODO: find a better source of information as to the precise definition of a URI
-//\TODO: identify more failure scenarios and add tests
-//\TODO: Refactor URIParser::Parse
-//\TODO: Add C DLL and C++ wrapper with portable data structures for access from other application
+///\TODO: identify more failure scenarios and add tests
+///\TODO: Refactor URIParser::Parse
+///\TODO: Add C DLL and C++ wrapper with portable data structures for access from other application
+///\TODO: Test support for URI references - Possibly add an option to flag if this is supported 
+///\TODO: Consider adding an option to decode percent encoded characters in the output
+
+///\TODO: percent encode test
+BOOST_FIXTURE_TEST_CASE(BadPercentEncodedCharactersAreNotAllowedInHostName, URIFixture)
+{
+	//Regex for permitted chars [A-Za-z0-9-._~]
+	//Plus %encoded e.g.%20 space
+	//delims= / ? # [] @
+	//user, password, host, and path can also contain !$ & ' ( ) * + , ; =
+	//path, query, and fragment can contain : and @
+	URIPARSER::URIData parsedData;
+	URIPARSER::URIParser parser;
+	BOOST_CHECK_EQUAL(parser.Parse("ftp://admin@exa%Z0mple.org:21/resource.txt", parsedData), false);
+	BOOST_CHECK_EQUAL(parsedData.schema, "");
+	BOOST_CHECK_EQUAL(parsedData.user, "");
+	BOOST_CHECK_EQUAL(parsedData.password, "");
+	BOOST_CHECK_EQUAL(parsedData.host, "");
+	BOOST_CHECK_EQUAL(parsedData.port, "");
+	BOOST_CHECK_EQUAL(parsedData.path, "");
+	BOOST_CHECK_EQUAL(parsedData.query, "");
+	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+	BOOST_CHECK_NE(parsedData.errors, "");
+}
+
+BOOST_FIXTURE_TEST_CASE(PercentEncodedCharactersAreAllowedInHostName, URIFixture)
+{
+	//Regex for permitted chars [A-Za-z0-9-._~]
+	//Plus %encoded e.g.%20 space
+	//delims= / ? # [] @
+	//user, password, host, and path can also contain !$ & ' ( ) * + , ; =
+	//path, query, and fragment can contain : and @
+	URIPARSER::URIData parsedData;
+	URIPARSER::URIParser parser;
+	BOOST_CHECK_EQUAL(parser.Parse("ftp://admin@exa%20mple.org:21/resource.txt", parsedData), true);
+	BOOST_CHECK_EQUAL(parsedData.schema, "ftp");
+	BOOST_CHECK_EQUAL(parsedData.user, "admin");
+	BOOST_CHECK_EQUAL(parsedData.password, "");
+	BOOST_CHECK_EQUAL(parsedData.host, "exa%20mple.org");
+	BOOST_CHECK_EQUAL(parsedData.port, "21");
+	BOOST_CHECK_EQUAL(parsedData.path, "resource.txt");
+	BOOST_CHECK_EQUAL(parsedData.query, "");
+	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+	BOOST_CHECK_EQUAL(parsedData.errors, "");
+}
 
 BOOST_FIXTURE_TEST_CASE(InvalidCharactersShouldFail, URIFixture)
 {
@@ -47,6 +91,22 @@ BOOST_FIXTURE_TEST_CASE(InvalidSchemaCharactersShouldFail, URIFixture)
 	BOOST_CHECK_NE(parsedData.errors, "");
 }
 
+BOOST_FIXTURE_TEST_CASE(FTPWithUsernamePasswordPortAndBadIPv6ShouldFail, URIFixture)
+{
+	URIPARSER::URIData parsedData;
+	URIPARSER::URIParser parser;
+	BOOST_CHECK_EQUAL(parser.Parse("ftp://admin@[2620::0:ccc::2]:21/resource.txt", parsedData), false);
+	BOOST_CHECK_EQUAL(parsedData.schema, "");
+	BOOST_CHECK_EQUAL(parsedData.user, "");
+	BOOST_CHECK_EQUAL(parsedData.password, "");
+	BOOST_CHECK_EQUAL(parsedData.host, "");
+	BOOST_CHECK_EQUAL(parsedData.port, "");
+	BOOST_CHECK_EQUAL(parsedData.path, "");
+	BOOST_CHECK_EQUAL(parsedData.query, "");
+	BOOST_CHECK_EQUAL(parsedData.fragment, "");
+	BOOST_CHECK_NE(parsedData.errors, "");
+}
+
 BOOST_FIXTURE_TEST_CASE(FTPWithUsernamePasswordPortAndIPv6, URIFixture)
 {
 	URIPARSER::URIData parsedData;
@@ -61,7 +121,6 @@ BOOST_FIXTURE_TEST_CASE(FTPWithUsernamePasswordPortAndIPv6, URIFixture)
 	BOOST_CHECK_EQUAL(parsedData.query, "");
 	BOOST_CHECK_EQUAL(parsedData.fragment, "");
 	BOOST_CHECK_EQUAL(parsedData.errors, "");
-
 }
 
 BOOST_FIXTURE_TEST_CASE(FTPWithUsernamePasswordPortAndIPv4, URIFixture)
@@ -83,9 +142,6 @@ BOOST_FIXTURE_TEST_CASE(FTPWithUsernamePasswordPortAndIPv4, URIFixture)
 
 BOOST_FIXTURE_TEST_CASE(FTPWithUsernamePortAndNoPassword, URIFixture)
 {
-	///\TODO Confim if this is strictly allowed - https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
-	/// This implies that user and password must come as a pair: scheme:[//[user:password@]host[:port]][/]path[?query][#fragment]
-	/// However it is common practice to omit the password
 	URIPARSER::URIData parsedData;
 	URIPARSER::URIParser parser;
 	BOOST_CHECK_EQUAL(parser.Parse("ftp://admin@example.org:21/resource.txt", parsedData), true);
