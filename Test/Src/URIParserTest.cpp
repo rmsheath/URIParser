@@ -5,7 +5,7 @@
 BOOST_AUTO_TEST_SUITE(URIParserTest)
 
 ///\TODO: identify more failure scenarios and add tests
-///\TODO: Refactor URIParser::Parse
+///\TODO: Move validation so it happens at the point each element is parsed
 ///\TODO: Add C DLL and C++ wrapper with portable data structures for access from other application
 ///\TODO: Test support for URI references - Possibly add an option to flag if this is supported 
 ///\TODO: Consider adding an option to decode percent encoded characters in the output

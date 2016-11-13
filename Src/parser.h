@@ -34,7 +34,7 @@ namespace URIPARSER
 	class URI_PARSER_DLLEXPORT URIParser
 	{
 	public:
-		bool Parse(const std::string URI, URIData& parsedURI);
+		bool Parse(const std::string& URI, URIData& parsedURI);
 	};
 }
 #endif
