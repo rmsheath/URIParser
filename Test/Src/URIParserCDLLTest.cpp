@@ -5,7 +5,7 @@
 
 BOOST_AUTO_TEST_SUITE(URIParserCDLLTest)
 
-//\TODO: Fix and add more test cases
+///\TODO: Fix and add more test cases
 
 BOOST_FIXTURE_TEST_CASE(TestDLL, URIFixture)
 {
